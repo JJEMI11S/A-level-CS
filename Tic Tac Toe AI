@@ -1,0 +1,259 @@
+import math
+import turtle
+canvas = turtle.Screen()
+ok = turtle.Turtle()
+ok.speed(0)
+drawn = turtle.Turtle()
+drawn.speed(0)
+test = turtle.Turtle()
+test.hideturtle()
+canvas.setup(400, 400)
+best_move = -1
+AI = "X"
+Human = "O"
+board = ["", "", "",  # 0, 1, 2
+         "", "", "",  # 3, 4, 5
+         "", "", ""]  # 6, 7, 8
+
+drawing = {0: [-150, 150], 1: [-50, 150], 2: [50, 150],
+           3: [-150, 50], 4: [-50, 50], 5: [50, 50],
+           6: [-150, -50], 7: [-50, -50], 8: [50, -50]}
+
+
+def staring():
+    ok.penup()
+    ok.goto(-150, 150)
+    ok.pendown()
+    for i in range(0, 4):
+        ok.forward(300)
+        ok.right(90)
+    ok.forward(100)
+    ok.right(90)
+    ok.forward(300)
+    ok.left(90)
+    ok.forward(100)
+    ok.left(90)
+    ok.forward(300)
+    ok.right(90)
+    ok.forward(100)
+    ok.right(90)
+    ok.forward(100)
+    ok.right(90)
+    ok.forward(300)
+    ok.left(90)
+    ok.forward(100)
+    ok.left(90)
+    ok.forward(300)
+    ok.hideturtle()
+    counter = 0
+    for i in board:
+        if i != "":
+            if i == "X":
+                draw_x(counter)
+            if i == "O":
+                draw_o(counter)
+        counter += 1
+
+def basic(coords):
+    global board
+    if coords[0] < -50:
+        m = 1
+    elif coords[0] < 50:
+        m = 2
+    else:
+        m = 3
+    if coords[1] > 50:
+        k = 0
+    elif coords[1] > -50:
+        k = 1
+    else:
+        k = 2
+    position = m + (3 * k)
+    return position - 1
+
+
+def draw_x(position):
+    drawn.setheading(0)
+    drawn.penup()
+    drawn.goto(drawing[position])
+    drawn.pendown()
+    drawn.right(45)
+    drawn.forward(math.sqrt(20000))
+    drawn.left(135)
+    drawn.forward(100)
+    drawn.left(135)
+    drawn.forward(math.sqrt(20000))
+    drawn.right(225)
+
+
+def draw_o(position):
+    drawn.setheading(0)
+    drawn.penup()
+    drawn.goto(drawing[position])
+    drawn.pendown()
+    drawn.right(90)
+    drawn.forward(50)
+    drawn.circle(50, 360)
+
+
+def win(current_board):
+    '''
+
+    :param current_board:
+    :param turn:
+    :return  the value of the board at the time of request:
+    '''
+    for i in range(0, 3):
+        if current_board[(1 + (3 * i)) - 1] == current_board[(2 + (3 * i)) - 1] == current_board[(3 + (3 * i)) - 1] != "":  #checks for wins horizontally
+            if current_board[(1 + (3 * i)) - 1] == AI:
+                return 10
+            elif current_board[(1 + (3 * i)) - 1] == Human:
+                return -10
+        if current_board[i] == current_board[i + 3] == current_board[i + 6] != "":  #checks for wins vertically
+            if current_board[i] == AI:
+                return 10
+            elif current_board[i] == Human:
+                return -10
+    if current_board[0] == current_board[4] == current_board[8] != "" or current_board[2] == current_board[4] == current_board[6] != "":  # checks for diagonal wins
+        if current_board[4] == AI:
+            return 10
+        elif current_board[4] == Human:
+            return -10
+    else:
+        return 0
+
+
+def terminal(current_board):
+    '''
+
+    :param current_board:
+    :return True or False (if terminal):
+    '''
+    counter = 0
+    for i in current_board:
+        if i == "":
+            counter += 1
+    if counter == 0:
+        return True
+    else:
+        return False
+
+
+def minimax(current_board, depth, turn):
+    '''
+
+    :param current_board:
+    :param depth:
+    :param turn:
+    :return:
+    '''
+    value = win(current_board)
+    if value == 10:
+        return value - depth
+
+    elif value == -10:
+        return value + depth
+
+    elif terminal(current_board):  # if at end of the line returns 0
+        return 0
+
+    if turn == AI:  # to check if looking for maximum or minimum
+        best = -5000
+        for i in range(len(current_board)):
+
+            if current_board[i] == "":  # represents all empty spaces
+
+                # set the best value for the maximise to a low value so any value taken from and end-state minimax will return a number greater
+
+                current_board[i] = AI
+
+                value = minimax(current_board, depth+1, Human)  # searches deeper (recursive function)
+
+                best = max(best, value)  # stores the best value
+
+                current_board[i] = ""
+
+        return best
+
+    if turn == Human:
+        best = 5000
+        for i in range(len(current_board)):
+
+            if current_board[i] == "":  # represents all empty spaces
+
+                current_board[i] = Human
+
+                value = minimax(current_board, depth+1, AI)
+
+                best = min(best, value)
+
+                current_board[i] = ""
+
+
+        return best
+
+
+def find_the_best_move_lol(current_board):
+    '''
+
+    :param current_board:
+    :returns best move to make (index of current_board):
+    '''
+    best_moved = -1
+    best = -10000
+    for i in range(len(current_board)):
+
+        if current_board[i] == "":
+
+
+            current_board[i] = AI
+
+            value = minimax(current_board, 0, Human)
+            current_board[i] = ""
+            if best < value:
+                best_moved = i
+                best = value
+
+    return best_moved
+
+
+def valid_move(coords, current_board):
+    if current_board[basic(coords)] != "":
+        return False
+    else:
+        return True
+
+
+def getting_clicks(x, y):
+    global board
+    coords = [x, y]
+    if valid_move(coords, board):
+        pos = basic(coords)
+        board[pos] = Human
+        draw_o(pos)
+        if win(board) == 10:
+            print("AI won")
+            canvas.bye()
+        elif win(board) == -10:
+            print("Human won")
+            canvas.bye()
+        #  AI turn
+        Ai_turn = find_the_best_move_lol(board)
+        board[Ai_turn] = AI
+        draw_x(Ai_turn)
+        if win(board) == 10:
+            print("AI won")
+            canvas.bye()
+        elif win(board) == -10:
+            print("Human won")
+            canvas.bye()
+
+    else:
+        print("invalid move")
+
+
+
+staring()
+canvas.onscreenclick(getting_clicks)
+
+canvas.mainloop()
