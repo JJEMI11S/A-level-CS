@@ -1,2 +1,4 @@
 # A-level-CS
-Work completed during my A levels
+Self-Project completed during my A levels
+Contains:
+Tic Tac Toe AI
